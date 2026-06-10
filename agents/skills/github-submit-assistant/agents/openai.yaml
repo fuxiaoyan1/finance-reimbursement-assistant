@@ -1,0 +1,3 @@
+display_name: GitHub Submit Assistant
+short_description: Prepare privacy-safe bilingual releases, validation, commits, and pushes for the finance reimbursement assistant.
+default_prompt: Use this skill to prepare the finance reimbursement assistant for a GitHub update: inspect dirty work, update bilingual public docs and release notes, verify no invoice/company/salary/course data is tracked, run validation, commit, and push.

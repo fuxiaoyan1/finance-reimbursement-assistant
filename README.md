@@ -4,6 +4,14 @@
 
 This repository is a local-first invoice reimbursement assistant. It reads an invoice folder selected by the user, extracts invoice data from PDFs and images, creates a reimbursement workbook, and bundles the source invoices into one PDF. The repository contains no real invoices, company data, or runtime data.
 
+Public review documents:
+
+公开审核文档：
+
+- [Notice / 公告](NOTICE.md)
+- [Disclaimer / 免责声明](DISCLAIMER.md)
+- [Public release preparation / 公开发布准备](docs/updates/2026-06-10-public-release.md)
+
 ## 功能
 
 - 读取一个目录下的 PDF、JPG、PNG、TIFF、WEBP 发票文件。
@@ -330,6 +338,7 @@ Common fields:
 - 不包含任何真实发票、人员信息、企业信息或历史运行结果。
 - 发票内容只在本机处理；是否调用本机 Codex CLI 或外部 HTTP endpoint 由用户配置决定。
 - 上传公开仓库前，请确认没有把运行时生成的 `data/`、发票目录、报销输出或本地配置文件加入 git。
+- 使用仓库内提交助手 `agents/skills/github-submit-assistant/` 可在提交前执行隐私和发布检查。
 
 ## Privacy and Data Boundary
 
@@ -337,10 +346,13 @@ Common fields:
 - It contains no real invoices, personal data, company data, or historical runtime results.
 - Invoice content is processed locally unless the user configures the Codex CLI or an external HTTP endpoint.
 - Before publishing a repository, confirm that runtime `data/`, invoice folders, reimbursement outputs, and local config files are not tracked by git.
+- Use the repository-local submit assistant under `agents/skills/github-submit-assistant/` for privacy and release checks before committing.
 
 ## 开发检查
 
 ```bash
+git diff --check
+node agents/skills/github-submit-assistant/scripts/check-release-safety.mjs .
 python3 -m py_compile invoice_agent.py web_app.py
 python3 -m unittest discover -s tests -v
 ```
@@ -348,6 +360,8 @@ python3 -m unittest discover -s tests -v
 ## Development Checks
 
 ```bash
+git diff --check
+node agents/skills/github-submit-assistant/scripts/check-release-safety.mjs .
 python3 -m py_compile invoice_agent.py web_app.py
 python3 -m unittest discover -s tests -v
 ```
