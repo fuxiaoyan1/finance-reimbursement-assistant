@@ -1,0 +1,19 @@
+{
+  "applicant": "张三",
+  "department": "财务部",
+  "reason": "5月费用报销",
+  "serial_prefix": "FP",
+  "default_category": "待分类",
+  "ocr_lang": "chi_sim+eng",
+  "save_json": true,
+  "use_llm": true,
+  "llm_provider": "codex",
+  "llm_model": "",
+  "llm_timeout": 45,
+  "llm_only_review_items": true,
+  "llm_max_files": 20,
+  "category_rules": [
+    "差旅费=航旅纵横,携程,去哪儿,机票",
+    "业务招待费=招待,宴请,餐厅"
+  ]
+}

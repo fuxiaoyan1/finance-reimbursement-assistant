@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>财务信息</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar compact">
+      <div>
+        <a class="back" href="/">← 首页</a>
+        <h1>报销信息</h1>
+        <p>发票目录处理、报销批次与月度合计</p>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>月报销信息</h2>
+        <div class="month-filter">
+          <label for="reimbursementYear">年</label>
+          <select id="reimbursementYear"></select>
+          <label for="reimbursementMonth">月</label>
+          <select id="reimbursementMonth"></select>
+        </div>
+      </div>
+      <form id="invoiceJobForm" class="form-panel">
+        <div class="folder-picker">
+          <button id="selectInvoiceDir" class="secondary-btn" type="button">选择目录</button>
+          <div class="selected-folder">
+            <span class="selected-folder-label">新报销发票目录</span>
+            <span id="invoiceDirDisplay" class="selected-folder-path">未选择</span>
+          </div>
+          <input id="invoiceDir" name="invoiceDir" type="hidden">
+        </div>
+        <div class="form-actions">
+          <button id="startInvoiceJob" class="primary-btn" type="submit">处理并登记</button>
+        </div>
+      </form>
+      <div id="invoiceJobStatus" class="job-status muted">选择发票目录后，生成物会写回原目录并自动更新月报销信息。</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>月份</th>
+              <th>批次</th>
+              <th>凭证数</th>
+              <th>计入张数</th>
+              <th>报销金额</th>
+              <th>报销表</th>
+            </tr>
+          </thead>
+          <tbody id="reimbursementRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+  <script src="/static/finance.js"></script>
+</body>
+</html>
