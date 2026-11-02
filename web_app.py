@@ -89,10 +89,11 @@ def applescript_quote(value: str) -> str:
 
 
 def choose_directory(default_dir: Path | None = None) -> str:
-    prompt = applescript_quote("选择新报销发票目录")
-    if default_dir and default_dir.exists() and default_dir.is_dir():
-        default_path = applescript_quote(str(default_dir))
-        script = f"""
+    if sys.platform == "darwin":
+        prompt = applescript_quote("选择新报销发票目录")
+        if default_dir and default_dir.exists() and default_dir.is_dir():
+            default_path = applescript_quote(str(default_dir))
+            script = f"""
 try
   set pickedFolder to choose folder with prompt {prompt} default location (POSIX file {default_path} as alias)
 on error number -128
@@ -100,8 +101,8 @@ on error number -128
 end try
 POSIX path of pickedFolder
 """
-    else:
-        script = f"""
+        else:
+            script = f"""
 try
   set pickedFolder to choose folder with prompt {prompt}
 on error number -128
@@ -109,10 +110,32 @@ on error number -128
 end try
 POSIX path of pickedFolder
 """
-    result = subprocess.run(["osascript", "-e", script], text=True, capture_output=True, check=False)
+        result = subprocess.run(["osascript", "-e", script], text=True, capture_output=True, check=False)
+        if result.returncode != 0:
+            raise RuntimeError(compact_process_output(result.stderr or result.stdout or "目录选择失败", max_lines=4))
+        return result.stdout.strip()
+    # Windows / Linux: 使用 PowerShell 系统文件夹选择框 (不依赖 Python 的 tcl/tk)
+    ps1 = APP_ROOT / "scripts" / "choose_folder.ps1"
+    if not ps1.exists():
+        raise RuntimeError(f"缺少目录选择脚本: {ps1}")
+    env = os.environ.copy()
+    if default_dir and default_dir.exists():
+        env["FAPIAO_DEFAULT_DIR"] = str(default_dir)
+    try:
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-STA", "-ExecutionPolicy", "Bypass", "-File", str(ps1)],
+            text=True,
+            capture_output=True,
+            check=False,
+            env=env,
+            timeout=120,
+        )
+    except Exception as exc:
+        raise RuntimeError(f"目录选择对话框不可用: {exc}")
     if result.returncode != 0:
         raise RuntimeError(compact_process_output(result.stderr or result.stdout or "目录选择失败", max_lines=4))
-    return result.stdout.strip()
+    selected = result.stdout.strip()
+    return "" if not selected else os.path.normpath(selected)
 
 
 def parse_invoice_agent_output(stdout: str) -> dict[str, Any]:
@@ -378,7 +401,12 @@ def api_open_file():
     path = Path(str(payload.get("path", ""))).expanduser()
     if not path.exists() or not path.is_file():
         return jsonify({"error": "file not found"}), 404
-    subprocess.run(["open", str(path)], check=False)
+    if sys.platform == "win32":
+        os.startfile(str(path))
+    elif sys.platform == "darwin":
+        subprocess.run(["open", str(path)], check=False)
+    else:
+        subprocess.run(["xdg-open", str(path)], check=False)
     return jsonify({"opened": str(path)})
 
 
