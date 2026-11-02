@@ -718,6 +718,17 @@ def extract_labeled_amount(lines: list[str], labels: list[str]) -> Decimal | Non
 
 
 def extract_amount(lines: list[str], preferred: bool) -> Decimal | None:
+    # 带 ¥ 符号的金额是发票上的正式金额（明细金额/税额/价税合计），价税合计通常是其中的最大值。
+    # 优先采用，可避免把开票日期年份（如"2026年09月27日"里的 2026）等裸数字误判为金额。
+    currency_values = []
+    for line in lines:
+        for value in re.findall(r"[¥$][ \t]*[0-9][0-9,]*(?:\.[0-9]{1,2})?", line):
+            parsed = parse_decimal(value)
+            if is_plausible_invoice_amount(parsed):
+                currency_values.append(parsed)
+    if currency_values:
+        return max(currency_values)
+
     priority_labels = ["价税合计", "小写", "总计", "合计金额", "Total", "Amount Due", "Grand Total"]
     secondary_labels = ["合计", "金额", "Amount", "Total"]
     labels = priority_labels if preferred else secondary_labels
@@ -728,15 +739,6 @@ def extract_amount(lines: list[str], preferred: bool) -> Decimal | None:
     context_value = extract_amount_near_labels(lines, labels)
     if context_value is not None:
         return context_value
-
-    currency_values = []
-    for line in lines:
-        for value in re.findall(r"[¥$][ \t]*[0-9][0-9,]*(?:\.[0-9]{1,2})?", line):
-            parsed = parse_decimal(value)
-            if is_plausible_invoice_amount(parsed):
-                currency_values.append(parsed)
-    if currency_values:
-        return max(currency_values)
 
     decimal_values = []
     for line in lines:
@@ -757,8 +759,11 @@ def extract_amount_near_labels(lines: list[str], labels: list[str]) -> Decimal |
         window = lines[idx : min(len(lines), idx + 8)]
         candidates: list[Decimal] = []
         for line in window:
-            for value in re.findall(r"[¥$]?[ \t]*[0-9][0-9,]*(?:\.[0-9]{1,2})?", line):
-                parsed = parse_decimal(value)
+            for match in re.finditer(r"[¥$]?[ \t]*[0-9][0-9,]*(?:\.[0-9]{1,2})?", line):
+                # 排除日期年份（数字后紧跟"年"，如 2026年09月27日），避免把年份当金额
+                if re.match(r"\s*年", line[match.end():]):
+                    continue
+                parsed = parse_decimal(match.group())
                 if is_plausible_invoice_amount(parsed):
                     candidates.append(parsed)
         if candidates:
